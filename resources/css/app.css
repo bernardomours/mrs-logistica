@@ -1,0 +1,113 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+
+/*
+ * Tokens de design — modelo visual: sidebar azul-marinho + destaque roxo + faixas lilás
+ * (ver CLAUDE.md §9). Ajuste aqui para mudar a identidade em todo o sistema.
+ */
+@theme {
+    --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+        'Segoe UI Symbol', 'Noto Color Emoji';
+
+    /* Azul-marinho: menu lateral, cabeçalho do portal e tela de login. */
+    --color-marinho-950: #12142c;
+    --color-marinho-900: #1b1f3b;
+    --color-marinho-800: #262b52;
+    --color-marinho-700: #333a6b;
+    --color-marinho-300: #a9aed0;
+    --color-marinho-200: #cdd0e6;
+
+    /* Cor principal: roxo e a escala em volta dele. */
+    --color-roxo-50: #f5f3ff;
+    --color-roxo-100: #ede9fe;
+    --color-roxo-200: #ddd6fe;
+    --color-roxo-400: #a78bfa;
+    --color-roxo-500: #8b5cf6;
+    --color-roxo-600: #6d4bd8;
+    --color-roxo-700: #5a3cb8;
+
+    /* Neutros com leve tom arroxeado. */
+    --color-tinta: #1c1f3a;
+    --color-fundo: #f7f7fb;
+    --color-borda: #e5e7f0;
+
+    --shadow-cartao: 0 1px 2px rgb(28 31 58 / 0.05);
+}
+
+@layer base {
+    html {
+        font-family: var(--font-sans);
+        color: var(--color-tinta);
+        -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+        background-color: var(--color-fundo);
+    }
+
+    [x-cloak] {
+        display: none !important;
+    }
+}
+
+@layer components {
+    /* Campos de formulário */
+    .campo {
+        @apply block w-full rounded-lg border border-borda bg-white px-3 py-2 text-sm text-tinta shadow-cartao
+            placeholder:text-gray-400 focus:border-roxo-500 focus:outline-none focus:ring-2 focus:ring-roxo-200
+            disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-500;
+    }
+
+    .campo-erro {
+        @apply border-red-400 focus:border-red-500 focus:ring-red-100;
+    }
+
+    .rotulo {
+        @apply mb-1.5 block text-sm font-medium text-tinta;
+    }
+
+    /* Botões */
+    .btn {
+        @apply inline-flex min-h-10 items-center justify-center gap-2 align-middle rounded-lg border px-4 py-2 text-sm font-medium
+            transition focus:outline-none focus:ring-2 focus:ring-roxo-200 disabled:cursor-not-allowed disabled:opacity-60;
+    }
+
+    .btn-primario {
+        @apply border-roxo-600 bg-roxo-600 text-white hover:bg-roxo-700;
+    }
+
+    .btn-secundario {
+        @apply border-borda bg-white text-tinta hover:bg-gray-50;
+    }
+
+    .btn-perigo {
+        @apply border-red-200 bg-white text-red-700 hover:bg-red-50;
+    }
+
+    .btn-link {
+        @apply border-transparent bg-transparent px-2 text-roxo-700 hover:bg-roxo-50;
+    }
+
+    /* Tabela */
+    .tabela {
+        @apply w-full text-left text-sm;
+    }
+
+    .tabela thead th {
+        @apply whitespace-nowrap border-b border-borda bg-gray-50/70 px-4 py-3 text-xs font-semibold tracking-wide text-gray-500 uppercase;
+    }
+
+    .tabela tbody td {
+        @apply border-b border-borda px-4 py-3 align-middle;
+    }
+
+    .tabela tbody tr:last-child td {
+        @apply border-b-0;
+    }
+
+    .tabela tbody tr:hover {
+        @apply bg-roxo-50/40;
+    }
+}
