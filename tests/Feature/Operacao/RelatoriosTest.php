@@ -19,6 +19,7 @@ use App\Models\TarifaRota;
 use App\Models\User;
 use App\Models\Veiculo;
 use App\Models\Viagem;
+use App\Services\FilialAtual;
 use App\Services\Indicadores;
 use App\Services\Relatorios\Catalogo;
 use App\Services\Relatorios\ComissoesPorMotorista;
@@ -610,6 +611,69 @@ class RelatoriosTest extends TestCase
             ->assertSee('21.017,71')                        // combustível é visível
             ->assertDontSee('53.779,11')->assertDontSee('3.226,75')->assertDontSee('29.534,65')
             ->assertDontSee('Principais rotas');
+    }
+
+    /** Filial B com uma única viagem concluída de R$ 1.000,00 na semana 41 (separada da planilha da filial A). */
+    private function filialComUmaViagem(): Filial
+    {
+        $filialB = Filial::factory()->create(['nome' => 'Filial Fortaleza']);
+        $motorista = Motorista::factory()->for($filialB)->create();
+        $veiculo = Veiculo::factory()->for($filialB)->create();
+
+        Viagem::factory()->create([
+            'filial_id' => $filialB->id, 'motorista_id' => $motorista->id, 'veiculo_id' => $veiculo->id,
+            'data_viagem' => '2026-10-07', 'valor_frete' => '1000.00', 'comissao_valor' => '60.00',
+        ]);
+
+        return $filialB;
+    }
+
+    public function test_dashboard_filtra_por_filial_e_acompanha_a_filial_ativa(): void
+    {
+        $this->semearPlanilha();
+        $filialB = $this->filialComUmaViagem();
+
+        $componente = Livewire::actingAs($this->admin)->test(Dashboard::class)
+            ->set('periodo', 'personalizado')->set('de', '2026-09-28')->set('ate', '2026-10-18')
+            ->assertSet('filial', 'todas')
+            ->assertSee('Todas as filiais')->assertSee('Filial Mossoró')->assertSee('Filial Fortaleza')
+            ->assertSee('54.779,11');                       // planilha da A + R$ 1.000,00 da B
+
+        $componente->set('filial', (string) $filialB->id)
+            ->assertSee('1.000,00')->assertDontSee('54.779,11')->assertDontSee('53.779,11');
+        $this->assertSame($filialB->id, app(FilialAtual::class)->selecionada());
+
+        $componente->set('filial', (string) $this->filial->id)
+            ->assertSee('53.779,11')->assertDontSee('54.779,11');
+
+        $componente->set('filial', 'todas')->assertSee('54.779,11');
+        $this->assertNull(app(FilialAtual::class)->selecionada());
+    }
+
+    public function test_dashboard_abre_na_filial_ativa_do_menu(): void
+    {
+        $this->semearPlanilha();
+        $filialB = $this->filialComUmaViagem();
+        $this->actingAs($this->admin);
+        app(FilialAtual::class)->selecionar($filialB->id);
+
+        Livewire::test(Dashboard::class)
+            ->assertSet('filial', (string) $filialB->id)
+            ->set('periodo', 'personalizado')->set('de', '2026-09-28')->set('ate', '2026-10-18')
+            ->assertSee('1.000,00')->assertDontSee('53.779,11');
+    }
+
+    public function test_filtro_de_filial_nunca_amplia_o_acesso(): void
+    {
+        $this->semearPlanilha();
+        $filialB = $this->filialComUmaViagem();
+        $gestorDaA = $this->usuarioComPapel('gerente_filial', [$this->filial]);
+
+        Livewire::actingAs($gestorDaA)->test(Dashboard::class)
+            ->set('periodo', 'personalizado')->set('de', '2026-09-28')->set('ate', '2026-10-18')
+            ->assertDontSee('Filial Fortaleza')
+            ->set('filial', (string) $filialB->id)
+            ->assertSee('53.779,11')->assertDontSee('54.779,11');
     }
 
     public function test_usuario_sem_dashboard_ver_ve_so_a_boas_vindas(): void

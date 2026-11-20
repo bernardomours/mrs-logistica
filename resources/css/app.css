@@ -47,6 +47,25 @@
         background-color: var(--color-fundo);
     }
 
+    /* Todo o texto do sistema em MAIÚSCULAS (só exibição; os dados gravados não mudam). */
+    body,
+    input,
+    select,
+    textarea,
+    button,
+    option {
+        text-transform: uppercase;
+    }
+
+    /* E-mail, senha e endereço web ficam como foram digitados. */
+    input[type='email'],
+    input[type='password'],
+    input[type='url'],
+    input[autocomplete='username'],
+    input[x-ref='campo'] {
+        text-transform: none;
+    }
+
     [x-cloak] {
         display: none !important;
     }

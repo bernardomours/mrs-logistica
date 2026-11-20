@@ -55,6 +55,8 @@ Route::middleware('auth')->group(function () {
             'abastecimentos' => 'abastecimento',
             'manutencoes' => 'manutencao',
             'tarifas' => 'tarifa',
+            'usuarios' => 'usuario',
+            'papeis' => 'papel',
         ];
 
         // Importação de tarifas por planilha (planilha de origem, destino e valor)

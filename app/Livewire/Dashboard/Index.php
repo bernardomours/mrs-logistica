@@ -3,6 +3,7 @@
 namespace App\Livewire\Dashboard;
 
 use App\Services\AlertasDePreventiva;
+use App\Services\FilialAtual;
 use App\Services\Indicadores;
 use App\Services\Relatorios\ConsumoPorVeiculo;
 use App\Services\Relatorios\FaturamentoPorRota;
@@ -28,12 +29,30 @@ class Index extends Component
     #[Url(history: true)]
     public string $ate = '';
 
-    public function mount(): void
+    /** Filial do filtro: id ou "todas". É a mesma filial ativa do seletor do menu (RN-18). */
+    public string $filial = 'todas';
+
+    public function mount(FilialAtual $filiais): void
     {
         // Motorista não usa o painel administrativo: vai direto para o portal (RN-21).
         if (Auth::user()->hasRole('motorista')) {
             $this->redirectRoute('portal.dashboard');
+
+            return;
         }
+
+        $this->filial = (string) ($filiais->selecionada() ?? 'todas');
+    }
+
+    /**
+     * Trocar a filial aqui troca a filial ativa do sistema inteiro (a mesma do menu lateral), sempre
+     * dentro das filiais que o usuário acessa. A página recarrega para todos os componentes respeitarem o escopo.
+     */
+    public function updatedFilial(string $valor, FilialAtual $filiais): void
+    {
+        $filiais->selecionar($valor === 'todas' ? null : (int) $valor);
+
+        $this->js('window.location.reload()');
     }
 
     public function updatedPeriodo(): void
@@ -56,9 +75,14 @@ class Index extends Component
         $atalho = array_key_exists($this->periodo, PeriodoRelatorio::ATALHOS) ? $this->periodo : 'mes_atual';
         $periodo = PeriodoRelatorio::deAtalho($atalho, $this->de, $this->ate);
         $indicadores = app(Indicadores::class);
+        $filiais = app(FilialAtual::class);
+        $disponiveis = $filiais->disponiveis();
 
         return view('livewire.dashboard.index', [
             'completo' => true,
+            'filiaisDisponiveis' => $disponiveis,
+            'podeVerTodas' => $filiais->permitidas() === null || $disponiveis->count() > 1,
+            'filialAtual' => $filiais->selecionada() !== null ? $disponiveis->firstWhere('id', $filiais->selecionada()) : null,
             'periodoEscolhido' => $periodo,
             'atalhos' => PeriodoRelatorio::ATALHOS,
             'atalhoAtual' => $atalho,

@@ -3,10 +3,6 @@
 @php
     $usuario = auth()->user();
     $papel = $usuario->getRoleNames()->first();
-    $papeis = [
-        'admin' => 'Administrador', 'gestor' => 'Gestor', 'gerente_filial' => 'Gerente de filial',
-        'financeiro' => 'Financeiro', 'operacional' => 'Operacional', 'consulta' => 'Consulta', 'motorista' => 'Motorista',
-    ];
 
     // Filtra itens: rota existente + permissão.
     $grupos = collect(config('navegacao.grupos'))->map(function ($grupo) use ($usuario) {
@@ -69,7 +65,7 @@
         <span class="grid size-9 shrink-0 place-items-center rounded-full bg-marinho-700 text-xs font-semibold text-white">{{ $iniciais }}</span>
         <div class="min-w-0 flex-1 leading-tight">
             <p class="truncate text-sm font-medium text-white">{{ $usuario->name }}</p>
-            <p class="truncate text-xs text-marinho-300">{{ $papeis[$papel] ?? 'Sem papel' }}</p>
+            <p class="truncate text-xs text-marinho-300">{{ $papel ? \App\Support\PapeisDoSistema::rotulo($papel) : 'Sem papel' }}</p>
         </div>
         <form method="POST" action="{{ route('logout') }}">
             @csrf

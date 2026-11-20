@@ -10,8 +10,16 @@
     @unless ($completo)
         <x-ui.alert>Bem-vindo ao sistema. Use o menu ao lado para acessar as telas liberadas para o seu perfil.</x-ui.alert>
     @else
-        {{-- Contexto: período --}}
+        {{-- Contexto: filial e período --}}
         <div class="mb-6 grid gap-4 rounded-2xl border border-borda bg-white p-5 shadow-cartao sm:grid-cols-2 lg:grid-cols-4">
+            @if ($filiaisDisponiveis->isNotEmpty())
+                <x-ui.field label="Filial" name="filial">
+                    <select wire:model.live="filial" class="campo">
+                        @if ($podeVerTodas)<option value="todas">Todas as filiais</option>@endif
+                        @foreach ($filiaisDisponiveis as $opcao)<option value="{{ $opcao->id }}">{{ $opcao->nome }}</option>@endforeach
+                    </select>
+                </x-ui.field>
+            @endif
             <x-ui.field label="Período" name="periodo">
                 <select wire:model.live="periodo" class="campo">
                     @foreach ($atalhos as $chave => $rotulo)<option value="{{ $chave }}">{{ $rotulo }}</option>@endforeach
@@ -22,7 +30,7 @@
                 <x-ui.field label="Até" name="ate"><input type="date" wire:model.live="ate" class="campo"></x-ui.field>
             @endif
             <div class="flex items-end text-sm text-gray-500 sm:col-span-2 lg:col-span-1">
-                <p>{{ $periodoEscolhido->rotulo() }}@if ($parcial) · <span class="text-amber-700">período em andamento</span>@endif</p>
+                <p>{{ $filialAtual?->nome ?? ($podeVerTodas ? 'Todas as filiais' : $filiaisDisponiveis->first()?->nome) }} · {{ $periodoEscolhido->rotulo() }}@if ($parcial) · <span class="text-amber-700">período em andamento</span>@endif</p>
             </div>
         </div>
 

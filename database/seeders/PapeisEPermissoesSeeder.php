@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Support\PapeisDoSistema;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -38,7 +39,7 @@ class PapeisEPermissoesSeeder extends Seeder
             $crud('fechamentos', ['ver', 'fechar', 'reabrir', 'pagar']),
             ['relatorios.ver', 'relatorios.exportar', 'dashboard.ver'],
             ['portal.acessar'],
-            $crud('usuarios', ['ver', 'criar', 'editar', 'desativar']),
+            $crud('usuarios', ['ver', 'criar', 'editar', 'desativar', 'excluir']),
             ['papeis.gerenciar', 'auditoria.ver', 'importacao.executar', 'configuracoes.editar'],
         );
     }
@@ -117,7 +118,11 @@ class PapeisEPermissoesSeeder extends Seeder
         foreach (self::papeis() as $papel => $permissoes) {
             $role = Role::findOrCreate($papel, 'web');
 
-            $role->syncPermissions(array_values(array_unique($permissoes)));
+            // Papéis padrão editados na tela de Papéis não são sobrescritos ao rodar o seeder de novo:
+            // só são sincronizados quando nascem. Administrador e motorista são sempre mantidos como o sistema define.
+            if ($role->wasRecentlyCreated || PapeisDoSistema::travado($papel)) {
+                $role->syncPermissions(array_values(array_unique($permissoes)));
+            }
         }
 
         app(PermissionRegistrar::class)->forgetCachedPermissions();
